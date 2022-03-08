@@ -1,0 +1,9 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=15
+
+start() {
+    (/usr/bin/netkeeper.sh &)
+    logger -t netkeeper "netkeeper listen start"
+}
