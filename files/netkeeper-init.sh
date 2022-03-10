@@ -1,15 +1,22 @@
 #!/bin/sh
 
 change_ppp_options() {
-    # Change log location, enable debug and show-password
+    if [ -f '/etc/ppp/options.bak' ]; then
+        echo "info: You may have executed this command."
+        exit 0
+    fi
     cp /etc/ppp/options /etc/ppp/options.bak
+    # Change log location, enable debug and show-password
     sed -i "s/\/dev\/null/\/tmp\/pppoe.log/" /etc/ppp/options
     sed -i "s/#debug/debug/" /etc/ppp/options
     echo "show-password" >> /etc/ppp/options
 }
 
 install_rp_pppoe_so() {
-    #cp /etc/ppp/plugins/rp-pppoe.so /etc/ppp/plugins/rp-pppoe.so.bak
+    if [ -f '/etc/ppp/plugins/rp-pppoe.so' ]; then
+        echo "info: rp-pppoe.so is loaded."
+        exit 0
+    fi
     PPPD_VERSION="$(ls /usr/lib/pppd)"
     cp /usr/lib/pppd/"${PPPD_VERSION}"/rp-pppoe.so /etc/ppp/plugins/rp-pppoe.so
 }
@@ -37,8 +44,12 @@ servers_restart() {
 }
 
 enable_rp_pppoe_server() {
+    if [ -f '/lib/netifd/proto/ppp.sh.bak' ]; then
+        echo "info: You may have executed this command."
+        exit 0
+    fi
     cp /lib/netifd/proto/ppp.sh /lib/netifd/proto/ppp.sh.bak
-    sed -i "/proto_run_command/i __username=\`echo -e \"\$username\"\`" /lib/netifd/proto/ppp.sh
+    sed -i "/proto_run_command/i __username=\$(echo -e \"\$username\")" /lib/netifd/proto/ppp.sh
     sed -i 's/__username=/\tusername=/' /lib/netifd/proto/ppp.sh
 }
 
