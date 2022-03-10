@@ -2,8 +2,9 @@
 
 change_ppp_options() {
     # Change log location, enable debug and show-password
-    sed "s/\/dev\/null/\/tmp\/pppoe.log/" /etc/ppp/options -i
-    sed "s/#debug/debug/" /etc/ppp/options -i
+    cp /etc/ppp/options /etc/ppp/options.bak
+    sed -i "s/\/dev\/null/\/tmp\/pppoe.log/" /etc/ppp/options
+    sed -i "s/#debug/debug/" /etc/ppp/options
     echo "show-password" >> /etc/ppp/options
 }
 
@@ -15,7 +16,7 @@ install_rp_pppoe_so() {
 
 add_network_netkeeper() {
     uci set network.netkeeper=interface
-    uci set network.netkeeper.device='wan'
+    uci set network.netkeeper.device="$(uci get network.wan.device)"
     uci set network.netkeeper.proto='pppoe'
     uci set network.netkeeper.username='username'
     uci set network.netkeeper.password='password'
@@ -37,14 +38,8 @@ servers_restart() {
 
 enable_rp_pppoe_server() {
     cp /lib/netifd/proto/ppp.sh /lib/netifd/proto/ppp.sh.bak
-    #sed -i '/proto_run_command/i username=`echo -e "$username"`' /lib/netifd/proto/ppp.sh
-    sed -i "/proto_run_command/i username=\`echo -e \"\$username\"\`" /lib/netifd/proto/ppp.sh
-}
-
-enable_startup_service_file() {
-    /etc/init.d/netkeeper enable
-    sleep 5
-    (/etc/init.d/netkeeper start &)
+    sed -i "/proto_run_command/i __username=\`echo -e \"\$username\"\`" /lib/netifd/proto/ppp.sh
+    sed -i 's/__username=/\tusername=/' /lib/netifd/proto/ppp.sh
 }
 
 main() {
@@ -55,7 +50,6 @@ main() {
     echo "       set_firewall_for_netkeeper"
     echo "       servers_restart"
     echo "       enable_rp_pppoe_server"
-    #enable_startup_service_file
     exit 0
 }
 
