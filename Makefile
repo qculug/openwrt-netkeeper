@@ -27,7 +27,7 @@ define Package/netkeeper
 	SECTION:=net
 	CATEGORY:=Network
 	TITLE:=Use NetKeeper by rp-pppoe-server
-	URL:=https://github.com/qculug/netkeeper-openwrt
+	URL:=https://github.com/qculug/openwrt-netkeeper
 	DEPENDS:=+rp-pppoe-server
 	PKGARCH:=all
 endef
