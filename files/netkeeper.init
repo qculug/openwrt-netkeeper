@@ -7,3 +7,12 @@ start() {
     (/usr/lib/netkeeper/netkeeper.sh &)
     logger -t netkeeper "netkeeper listen start"
 }
+
+stop() {
+    if [ -n "$(ps | grep netkeeper.sh | grep -v grep)" ]; then
+        kill "$(ps | grep netkeeper.sh | grep -v grep | awk -F ' ' '{print $1}')"
+    fi
+    if [ -n "$(pgrep pppoe-server)" ]; then
+        kill "$(pgrep pppoe-server)"
+    fi
+}
