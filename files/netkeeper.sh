@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # Start pppoe-server
-if [ -n "$(ps | grep pppoe-server | grep -v grep)" ]; then
-    killall pppoe-server
+if [ -n "$(pgrep pppoe-server)" ]; then
+    kill "$(pgrep pppoe-server)"
 fi
 pppoe-server -k -I br-lan
 
