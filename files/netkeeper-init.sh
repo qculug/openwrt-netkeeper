@@ -22,14 +22,14 @@ change_ppp_sh() {
     sed -i 's/__username=/\tusername=/' /lib/netifd/proto/ppp.sh
 }
 
-install_rp_pppoe_so() {
-    if [ -f '/etc/ppp/plugins/rp-pppoe.so' ]; then
-        echo "info: rp-pppoe.so is loaded, you may have executed this command."
-        exit 0
-    fi
-    PPPD_VERSION="$(ls /usr/lib/pppd)"
-    cp /usr/lib/pppd/"${PPPD_VERSION}"/rp-pppoe.so /etc/ppp/plugins/rp-pppoe.so
-}
+#install_rp_pppoe_so() {
+#    if [ -f '/etc/ppp/plugins/rp-pppoe.so' ]; then
+#        echo "info: rp-pppoe.so is loaded, you may have executed this command."
+#        exit 0
+#    fi
+#    PPPD_VERSION="$(ls /usr/lib/pppd)"
+#    cp /usr/lib/pppd/"${PPPD_VERSION}"/rp-pppoe.so /etc/ppp/plugins/rp-pppoe.so
+#}
 
 add_network_netkeeper() {
     if [ -n "$(uci get network.netkeeper 2> /dev/null)" ]; then
@@ -37,7 +37,13 @@ add_network_netkeeper() {
         exit 0
     fi
     uci set network.netkeeper=interface
-    uci set network.netkeeper.device="$(uci get network.wan.device)"
+    if [ -n "$(uci get network.wan.device 2> /dev/null)" ]; then
+        # openwrt/openwrt
+        uci set network.netkeeper.device="$(uci get network.wan.device)"
+    else
+        # coolsnowwolf/lede
+        uci set network.netkeeper.device="$(uci get network.wan.ifname)"
+    fi
     uci set network.netkeeper.proto='pppoe'
     uci set network.netkeeper.username='username'
     uci set network.netkeeper.password='password'
@@ -65,7 +71,7 @@ main() {
     echo "usage: $0 [command]"
     echo "       change_ppp_options"
     echo "       change_ppp_sh"
-    echo "       install_rp_pppoe_so"
+#    echo "       install_rp_pppoe_so"
     echo "       add_network_netkeeper"
     echo "       set_firewall_for_netkeeper"
     echo "       servers_restart"
