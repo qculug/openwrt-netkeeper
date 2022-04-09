@@ -22,15 +22,6 @@ change_ppp_sh() {
     sed -i 's/__username=/\tusername=/' /lib/netifd/proto/ppp.sh
 }
 
-#install_rp_pppoe_so() {
-#    if [ -f '/etc/ppp/plugins/rp-pppoe.so' ]; then
-#        echo "info: rp-pppoe.so is loaded, you may have executed this command."
-#        exit 0
-#    fi
-#    PPPD_VERSION="$(ls /usr/lib/pppd)"
-#    cp /usr/lib/pppd/"${PPPD_VERSION}"/rp-pppoe.so /etc/ppp/plugins/rp-pppoe.so
-#}
-
 add_network_netkeeper() {
     if [ -n "$(uci get network.netkeeper 2> /dev/null)" ]; then
         echo "info: network.netkeeper has been added, you may have executed this command."
@@ -71,7 +62,6 @@ main() {
     echo "usage: $0 [command]"
     echo "       change_ppp_options"
     echo "       change_ppp_sh"
-#    echo "       install_rp_pppoe_so"
     echo "       add_network_netkeeper"
     echo "       set_firewall_for_netkeeper"
     echo "       servers_restart"
