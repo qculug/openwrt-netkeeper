@@ -33,7 +33,7 @@ add_network_netkeeper() {
         uci set network.netkeeper.device="$(uci get network.wan.device)"
     else
         # coolsnowwolf/lede
-        uci set network.netkeeper.device="$(uci get network.wan.ifname)"
+        uci set network.netkeeper.ifname="$(uci get network.wan.ifname)"
     fi
     uci set network.netkeeper.proto='pppoe'
     uci set network.netkeeper.username='username'
