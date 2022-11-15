@@ -22,6 +22,12 @@ change_ppp_sh() {
     sed -i 's/__username=/\tusername=/' /lib/netifd/proto/ppp.sh
 }
 
+edit_network_wan_wan6_unmanaged() {
+    uci set network.wan.proto='none'
+    uci set network.wan6.proto='none'
+    uci commit network
+}
+
 add_network_netkeeper() {
     if [ -n "$(uci get network.netkeeper 2> /dev/null)" ]; then
         echo "info: network.netkeeper has been added, you may have executed this command."
@@ -59,7 +65,7 @@ servers_restart() {
 }
 
 command_all() {
-    for COMMANDS in change_ppp_options change_ppp_sh add_network_netkeeper set_firewall_for_netkeeper servers_restart; do
+    for COMMANDS in change_ppp_options change_ppp_sh edit_network_wan_wan6_unmanaged add_network_netkeeper set_firewall_for_netkeeper servers_restart; do
         "$COMMANDS"
         sleep 1s
         sync
@@ -71,6 +77,7 @@ main() {
     echo "usage: $0 [command] --all"
     echo "       change_ppp_options"
     echo "       change_ppp_sh"
+    echo "       edit_network_wan_wan6_unmanaged"
     echo "       add_network_netkeeper"
     echo "       set_firewall_for_netkeeper"
     echo "       servers_restart"
