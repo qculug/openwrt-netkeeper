@@ -20,7 +20,6 @@ pppoe-server -k -I br-lan
 while :; do
     for PPPOE_ERRORS in 1 2 3 4; do
         if [ -z "$(ifconfig | grep "netkeeper")" ]; then
-            cat /dev/null > /tmp/pppoe.log.0
             # After the loop executes three times, kill the pppoe-server process
             if [ "$PPPOE_ERRORS" -eq "4" ]; then
                 kill_pppoe_server
@@ -28,10 +27,12 @@ while :; do
                 pppoe-server -k -I br-lan
                 continue
             fi
+            cat /dev/null > /tmp/pppoe.log.0
             ifdown netkeeper
             ifup netkeeper
             sleep 10s
-            for PPPOE in 1 2 3; do
+            PPPOE="1"
+            while [ "$PPPOE" -lt "4" ]; do
                 # Read the last username and password in pppoe.log
                 USERNAME="$(grep 'user=' /tmp/pppoe.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
                 PASSWORD="$(grep 'user=' /tmp/pppoe.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
@@ -45,6 +46,7 @@ while :; do
                     fi
                 fi
                 sleep 10s
+                PPPOE="$((PPPOE + 1))"
             done
         else
             if [ ! -s "/tmp/pppoe.log.0" ]; then
