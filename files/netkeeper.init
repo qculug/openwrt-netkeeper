@@ -5,7 +5,7 @@ STOP=15
 
 start() {
     (/usr/lib/netkeeper/netkeeper.sh &)
-    logger -t netkeeper "- listen start -"
+    logger -t netkeeper "listen start"
 }
 
 stop() {
