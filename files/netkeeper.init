@@ -9,8 +9,8 @@ start() {
 }
 
 stop() {
-    if [ -n "$(ps | grep netkeeper.sh | grep -v grep)" ]; then
-        kill "$(ps | grep netkeeper.sh | grep -v grep | awk -F ' ' '{print $1}')"
+    if [ -n "$(pgrep netkeeper.sh)" ]; then
+        kill "$(pgrep netkeeper.sh)"
     fi
     if [ -n "$(pgrep pppoe-server)" ]; then
         kill "$(pgrep pppoe-server)"
