@@ -5,10 +5,6 @@ kill_pppoe_server() {
         kill "$(pgrep pppoe-server)"
     fi
 }
-restart_netkeeper() {
-    ifdown netkeeper
-    ifup netkeeper
-}
 
 kill_pppoe_server
 # Start pppoe-server
@@ -25,7 +21,7 @@ while :; do
                 continue
             fi
             cat /dev/null > /tmp/pppoe.log.0
-            restart_netkeeper
+            ifup netkeeper
             sleep 15s
             PPPOE="0"
             while [ "$PPPOE" -lt "2" ]; do
@@ -43,14 +39,15 @@ while :; do
                         logger -t netkeeper "new username: $USERNAME"
                     else
                         if [ -z "$(ifconfig | grep "netkeeper")" ]; then
-                            restart_netkeeper
+                            ifup netkeeper
                         fi
                     fi
                     sleep 10s
+                    PPPOE="$((PPPOE + 1))"
                 else
+                    PPPOE="$((PPPOE + 1))"
                     continue
                 fi
-                PPPOE="$((PPPOE + 1))"
             done
         else
             if [ ! -s "/tmp/pppoe.log.0" ]; then
@@ -58,6 +55,7 @@ while :; do
             fi
             # Clear pppoe.log
             cat /dev/null > /tmp/pppoe.log
+            sleep 5s
         fi
     done
 done

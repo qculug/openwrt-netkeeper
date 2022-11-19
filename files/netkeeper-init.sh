@@ -42,7 +42,6 @@ add_network_netkeeper() {
         uci set network.netkeeper.ifname="$(uci get network.wan.ifname)"
     fi
     uci set network.netkeeper.proto='pppoe'
-    uci set network.netkeeper.metric='0'
     uci set network.netkeeper.auto='0'
     NEWHOST="DESKTOP-$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | md5sum | cut -c 1-7 | tr a-z A-Z)"
     NEWMAC="$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | md5sum | sed -e 's/^\(..\)\(..\)\(..\)\(..\)\(..\)\(..\).*$/\1:\2:\3:\4:\5:\6/' -e 's/^\(.\)[13579bdf]/\10/')"
