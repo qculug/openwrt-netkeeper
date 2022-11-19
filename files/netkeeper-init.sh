@@ -48,6 +48,7 @@ add_network_netkeeper() {
     NEWMAC="$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | md5sum | sed -e 's/^\(..\)\(..\)\(..\)\(..\)\(..\)\(..\).*$/\1:\2:\3:\4:\5:\6/' -e 's/^\(.\)[13579bdf]/\10/')"
     uci set network.netkeeper.hostname="$NEWHOST"
     uci set network.netkeeper.macaddr="$NEWMAC"
+    uci set network.netkeeper.keepalive='2 10'
     uci set network.netkeeper.username='username'
     uci set network.netkeeper.password='password'
     uci commit network

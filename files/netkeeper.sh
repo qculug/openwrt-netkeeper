@@ -18,10 +18,10 @@ kill_pppoe_server
 pppoe-server -k -I br-lan
 
 while :; do
-    for PPPOE_ERRORS in 1 2 3 4; do
+    for PPPOE_ERRORS in 0 1 2; do
         if [ -z "$(ifconfig | grep "netkeeper")" ]; then
             # After the loop executes three times, kill the pppoe-server process
-            if [ "$PPPOE_ERRORS" -eq "4" ]; then
+            if [ "$PPPOE_ERRORS" -eq "2" ]; then
                 kill_pppoe_server
                 # Start pppoe-server
                 pppoe-server -k -I br-lan
@@ -30,22 +30,26 @@ while :; do
             cat /dev/null > /tmp/pppoe.log.0
             ifdown netkeeper
             ifup netkeeper
-            sleep 10s
-            PPPOE="1"
-            while [ "$PPPOE" -lt "4" ]; do
+            sleep 15s
+            PPPOE="0"
+            while [ "$PPPOE" -lt "2" ]; do
                 # Read the last username and password in pppoe.log
                 USERNAME="$(grep 'user=' /tmp/pppoe.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
                 PASSWORD="$(grep 'user=' /tmp/pppoe.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
-                if [ "$USERNAME" != "$USERNAME_OLD" ]; then
-                    restart_netkeeper
-                    USERNAME_OLD="$USERNAME"
-                    logger -t netkeeper "new username $USERNAME"
-                else
-                    if [ -z "$(ifconfig | grep "netkeeper")" ]; then
+                PPPOE_USERNAME="$(uci get network.netkeeper.username 2> /dev/null)"
+                if [ -n "$USERNAME" ]; then
+                    if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
                         restart_netkeeper
+                        logger -t netkeeper "new username: $USERNAME"
+                    else
+                        if [ -z "$(ifconfig | grep "netkeeper")" ]; then
+                            restart_netkeeper
+                        fi
                     fi
+                    sleep 10s
+                else
+                    continue
                 fi
-                sleep 10s
                 PPPOE="$((PPPOE + 1))"
             done
         else
