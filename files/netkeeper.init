@@ -9,8 +9,8 @@ start() {
 }
 
 stop() {
-    if [ -n "$(pgrep netkeeper.sh)" ]; then
-        kill "$(pgrep netkeeper.sh)"
+    if [ -n "$(pgrep -f netkeeper.sh)" ]; then
+        kill "$(pgrep -f netkeeper.sh)"
     fi
     if [ -n "$(pgrep pppoe-server)" ]; then
         kill "$(pgrep pppoe-server)"
