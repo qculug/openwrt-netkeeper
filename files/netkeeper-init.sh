@@ -1,11 +1,11 @@
 #!/bin/sh
 
 change_ppp_options() {
-    if [ -f '/etc/ppp/options.orig' ]; then
-        echo "info: options.orig file already exist."
+    if [ -f '/etc/ppp/options.orig.bak' ]; then
+        echo "info: options.orig.bak file already exist."
         return 0
     fi
-    cp /etc/ppp/options /etc/ppp/options.orig
+    cp /etc/ppp/options /etc/ppp/options.orig.bak
     # Enables connection debugging facilities
     sed -i 's/#debug/debug/' /etc/ppp/options
     # Change log location
@@ -13,11 +13,11 @@ change_ppp_options() {
 }
 
 change_pppoe_server_options() {
-    if [ -f '/etc/ppp/pppoe-server-options.orig' ]; then
-        echo "info: pppoe-server-options.orig file already exist."
+    if [ -f '/etc/ppp/pppoe-server-options.orig.bak' ]; then
+        echo "info: pppoe-server-options.orig.bak file already exist."
         return 0
     fi
-    cp /etc/ppp/pppoe-server-options /etc/ppp/pppoe-server-options.orig
+    cp /etc/ppp/pppoe-server-options /etc/ppp/pppoe-server-options.orig.bak
     # Enables connection debugging facilities
     sed -i '/GPL/a debug' /etc/ppp/pppoe-server-options
     # Change log location
@@ -30,11 +30,11 @@ change_pppoe_server_options() {
 }
 
 change_ppp_sh() {
-    if [ -f '/lib/netifd/proto/ppp.sh.orig' ]; then
-        echo "info: ppp.sh.orig file already exist."
+    if [ -f '/lib/netifd/proto/ppp.sh.orig.bak' ]; then
+        echo "info: ppp.sh.orig.bak file already exist."
         return 0
     fi
-    cp /lib/netifd/proto/ppp.sh /lib/netifd/proto/ppp.sh.orig
+    cp /lib/netifd/proto/ppp.sh /lib/netifd/proto/ppp.sh.orig.bak
     sed -i "/proto_run_command/i __username=\$(echo -e \"\$username\")" /lib/netifd/proto/ppp.sh
     sed -i 's/__username=/\tusername=/' /lib/netifd/proto/ppp.sh
 }
