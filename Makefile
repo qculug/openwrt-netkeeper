@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=netkeeper
-PKG_VERSION:=1.5
+PKG_VERSION:=1.6
 PKG_RELEASE:=1
 
 #PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-openwrt-master
@@ -41,11 +41,13 @@ endef
 
 define Package/netkeeper/install
 	$(INSTALL_DIR) $(1)/usr/bin/
-	$(INSTALL_BIN) $(CURDIR)/files/netkeeper-init.sh $(1)/usr/bin/netkeeper-init
+	$(INSTALL_BIN) ./files/netkeeper-init.sh $(1)/usr/bin/netkeeper-init
 	$(INSTALL_DIR) $(1)/usr/lib/netkeeper/
-	$(INSTALL_BIN) $(CURDIR)/files/netkeeper.sh $(1)/usr/lib/netkeeper
+	$(INSTALL_BIN) ./files/netkeeper.sh $(1)/usr/lib/netkeeper
 	$(INSTALL_DIR) $(1)/etc/init.d/
-	$(INSTALL_BIN) $(CURDIR)/files/netkeeper.init $(1)/etc/init.d/netkeeper
+	$(INSTALL_BIN) ./files/netkeeper.init $(1)/etc/init.d/netkeeper
+	$(INSTALL_DIR) $(1)/etc/uci-defaults/
+	$(INSTALL_DATA) ./files/netkeeper.default $(1)/etc/uci-defaults/99-netkeeper
 endef
 
 $(eval $(call BuildPackage,netkeeper))

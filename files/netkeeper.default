@@ -1,0 +1,46 @@
+#!/bin/sh
+
+edit_network_wan_wan6_unmanaged() {
+    uci set network.wan.proto='none'
+    uci set network.wan6.proto='none'
+    uci commit network
+}
+
+add_network_netkeeper() {
+    NEWHOST="DESKTOP-$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | md5sum | cut -c 1-7 | tr a-z A-Z)"
+    NEWMAC="$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | md5sum | sed -e 's/^\(..\)\(..\)\(..\)\(..\)\(..\)\(..\).*$/\1:\2:\3:\4:\5:\6/' -e 's/^\(.\)[13579bdf]/\10/')"
+
+    uci set network.netkeeper=interface
+    if [ -n "$(uci -q get network.wan.device)" ]; then
+        # openwrt/openwrt
+        uci set network.netkeeper.device="$(uci get network.wan.device)"
+    else
+        # coolsnowwolf/lede
+        uci set network.netkeeper.ifname="$(uci get network.wan.ifname)"
+    fi
+    uci set network.netkeeper.proto='pppoe'
+    uci set network.netkeeper.auto='0'
+    uci set network.netkeeper.hostname="$NEWHOST"
+    uci set network.netkeeper.macaddr="$NEWMAC"
+    uci set network.netkeeper.username='username'
+    uci set network.netkeeper.password='password'
+    uci set network.netkeeper.keepalive='0'
+    uci set network.netkeeper.demand='0'
+    uci commit network
+}
+
+set_firewall_for_netkeeper() {
+    uci set firewall.@zone[1].network="$(uci get firewall.@zone[1].network) netkeeper"
+    uci commit firewall
+}
+
+main() {
+    for COMMANDS in edit_network_wan_wan6_unmanaged add_network_netkeeper set_firewall_for_netkeeper; do
+        "$COMMANDS"
+        sleep 1s
+        sync
+    done
+    exit 0
+}
+
+main
