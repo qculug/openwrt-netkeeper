@@ -35,6 +35,7 @@ change_ppp_sh() {
         return 0
     fi
     cp /lib/netifd/proto/ppp.sh /lib/netifd/proto/ppp.sh.orig.bak
+    chmod 644 /lib/netifd/proto/ppp.sh.orig.bak
     sed -i "/proto_run_command/i __username=\$(echo -e \"\$username\")" /lib/netifd/proto/ppp.sh
     sed -i 's/__username=/\tusername=/' /lib/netifd/proto/ppp.sh
 }
