@@ -68,7 +68,7 @@ add_network_netkeeper() {
     uci set network.netkeeper.macaddr="$NEWMAC"
     uci set network.netkeeper.username='username'
     uci set network.netkeeper.password='password'
-    uci set network.netkeeper.keepalive='0'
+    uci set network.netkeeper.keepalive='60 300'
     uci set network.netkeeper.demand='0'
     uci commit network
 }
