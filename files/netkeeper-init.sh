@@ -63,13 +63,15 @@ add_network_netkeeper() {
         uci set network.netkeeper.ifname="$(uci get network.wan.ifname)"
     fi
     uci set network.netkeeper.proto='pppoe'
-    uci set network.netkeeper.auto='0'
     uci set network.netkeeper.hostname="$NEWHOST"
     uci set network.netkeeper.macaddr="$NEWMAC"
+    uci set network.netkeeper.auto='0'
+    uci set network.netkeeper.demand='0'
+    uci set network.netkeeper.keepalive='60 300'
     uci set network.netkeeper.username='username'
     uci set network.netkeeper.password='password'
-    uci set network.netkeeper.keepalive='60 300'
-    uci set network.netkeeper.demand='0'
+    uci set network.netkeeper.persist='1'
+    uci set network.netkeeper.holdoff='1'
     uci commit network
 }
 

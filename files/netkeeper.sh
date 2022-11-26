@@ -7,9 +7,23 @@ kill_pppoe_server() {
 }
 
 restart_pppoe_server() {
+    # Clear pppoe-server.log
+    cat /dev/null > /var/log/pppoe-server.log
     kill_pppoe_server
     # Start pppoe-server
     pppoe-server -k -I br-lan
+}
+
+clear_ppp_log() {
+    if [ -f '/var/log/ppp.log' ]; then
+        if [ "$(du -k /var/log/ppp.log | cut -f 1)" -gt 20 ]; then
+            # Clear ppp.log
+            cat /dev/null > /var/log/ppp.log
+        fi
+    else
+        # Clear ppp.log
+        cat /dev/null > /var/log/ppp.log
+    fi
 }
 
 main () {
@@ -18,15 +32,13 @@ main () {
         for PPPOE_ERRORS in 0 1 2; do
             if [ -z "$(ifconfig | grep "netkeeper")" ]; then
                 # After the loop executes three times, restart the pppoe-server process
-                if [ "$PPPOE_ERRORS" -eq 0 ]; then
-                    # Clear all logs
-                    cat /dev/null > /var/log/ppp.log
-                    cat /dev/null > /var/log/ppp.log.0
-                    cat /dev/null > /var/log/pppoe-server.log
-                elif [ "$PPPOE_ERRORS" -eq 2 ]; then
+                if [ "$PPPOE_ERRORS" -eq 2 ]; then
                     restart_pppoe_server
                     continue
                 fi
+                # Clear ppp.log.0
+                cat /dev/null > /var/log/ppp.log.0
+                clear_ppp_log
                 # Output log to ppp.log
                 ifup netkeeper
                 sleep 15s
@@ -58,10 +70,7 @@ main () {
                 done
             else
                 # After the loop executes three times, restart the pppoe-server process
-                if [ "$PPPOE_ERRORS" -eq 0 ]; then
-                    # Clear pppoe-server.log
-                    cat /dev/null > /var/log/pppoe-server.log
-                elif [ "$PPPOE_ERRORS" -eq 2 ]; then
+                if [ "$PPPOE_ERRORS" -eq 2 ]; then
                     restart_pppoe_server
                     continue
                 fi
@@ -71,12 +80,7 @@ main () {
                         sync
                     fi
                 fi
-                if [ -f '/var/log/ppp.log' ]; then
-                    if [ "$(du -k /var/log/ppp.log | cut -f 1)" -gt 20 ]; then
-                        # Clear ppp.log
-                        cat /dev/null > /var/log/ppp.log
-                    fi
-                fi
+                clear_ppp_log
                 sleep 30s
                 if [ -f '/var/log/pppoe-server.log' ]; then
                     # Read the last username and password in pppoe-server.log
