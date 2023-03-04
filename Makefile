@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=netkeeper
 PKG_VERSION:=1.8.1
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 #PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-openwrt-master
 #PKG_SOURCE:=master.zip
