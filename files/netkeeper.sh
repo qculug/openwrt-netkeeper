@@ -59,8 +59,10 @@ main () {
             #while [ "$PPPOE" -lt 2 ]; do
             if [ -f '/var/log/pppoe-server.log' ]; then
                 # Read the last username and password in pppoe-server.log
-                USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
-                PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
+                #USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
+                USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*user="//;s/" password=.*//')"
+                #PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
+                PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*password="//;s/".*//')"
                 if [ -n "$USERNAME" ]; then
                     PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
                     if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
@@ -98,8 +100,10 @@ main () {
             sleep 30s
             if [ -f '/var/log/pppoe-server.log' ]; then
                 # Read the last username and password in pppoe-server.log
-                USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
-                PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
+                #USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
+                USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*user="//;s/" password=.*//')"
+                #PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
+                PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*password="//;s/".*//')"
                 if [ -n "$USERNAME" ]; then
                     PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
                     if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
