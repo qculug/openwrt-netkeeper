@@ -8,10 +8,22 @@ kill_pppoe_server() {
 
 restart_pppoe_server() {
     # Clear pppoe-server.log
-    cat /dev/null > /var/log/pppoe-server.log
+    #cat /dev/null > /var/log/pppoe-server.log
     kill_pppoe_server
     # Start pppoe-server
     pppoe-server -k -I br-lan
+}
+
+clear_pppoe_server_log() {
+    if [ -f '/var/log/pppoe-server.log' ]; then
+        if [ "$(du -k /var/log/pppoe-server.log | cut -f 1)" -gt 20 ]; then
+            # Clear pppoe-server.log
+            cat /dev/null > /var/log/pppoe-server.log
+        fi
+    else
+        # Clear pppoe-server.log
+        cat /dev/null > /var/log/pppoe-server.log
+    fi
 }
 
 clear_ppp_log() {
@@ -29,74 +41,76 @@ clear_ppp_log() {
 main () {
     restart_pppoe_server
     while :; do
-        for PPPOE_ERRORS in 0 1 2; do
-            if [ -z "$(ifconfig | grep "netkeeper")" ]; then
-                # After the loop executes three times, restart the pppoe-server process
-                if [ "$PPPOE_ERRORS" -eq 2 ]; then
-                    restart_pppoe_server
-                    continue
-                fi
-                # Clear ppp.log.0
-                cat /dev/null > /var/log/ppp.log.0
-                clear_ppp_log
-                # Output log to ppp.log
-                ifup netkeeper
-                sleep 15s
-                PPPOE="0"
-                while [ "$PPPOE" -lt 2 ]; do
-                    if [ -f '/var/log/pppoe-server.log' ]; then
-                        # Read the last username and password in pppoe-server.log
-                        USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
-                        PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
-                        if [ -n "$USERNAME" ]; then
-                            PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
-                            if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
-                                uci set network.netkeeper.username="$USERNAME"
-                                uci set network.netkeeper.password="$PASSWORD"
-                                uci commit network
-                                ifup netkeeper
-                                logger -t netkeeper "new username: $USERNAME"
-                            else
-                                if [ -z "$(ifconfig | grep "netkeeper")" ]; then
-                                    ifup netkeeper
-                                fi
-                            fi
-                            sleep 15s
-                            PPPOE="$((PPPOE + 1))"
-                        else
-                            break
+        #for PPPOE_ERRORS in 0 1 2; do
+        if [ -z "$(ifconfig | grep "netkeeper")" ]; then
+            # After the loop executes three times, restart the pppoe-server process
+            #if [ "$PPPOE_ERRORS" -eq 2 ]; then
+            #restart_pppoe_server
+            #continue
+            #fi
+            # Clear ppp.log.0
+            cat /dev/null > /var/log/ppp.log.0
+            clear_pppoe_server_log
+            clear_ppp_log
+            # Output log to ppp.log
+            ifup netkeeper
+            sleep 15s
+            #PPPOE="0"
+            #while [ "$PPPOE" -lt 2 ]; do
+            if [ -f '/var/log/pppoe-server.log' ]; then
+                # Read the last username and password in pppoe-server.log
+                USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
+                PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
+                if [ -n "$USERNAME" ]; then
+                    PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
+                    if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
+                        uci set network.netkeeper.username="$USERNAME"
+                        uci set network.netkeeper.password="$PASSWORD"
+                        uci commit network
+                        ifup netkeeper
+                        logger -t netkeeper "new username: $USERNAME"
+                    else
+                        if [ -z "$(ifconfig | grep "netkeeper")" ]; then
+                            ifup netkeeper
                         fi
                     fi
-                done
-            else
-                # After the loop executes three times, restart the pppoe-server process
-                if [ "$PPPOE_ERRORS" -eq 2 ]; then
-                    restart_pppoe_server
-                    continue
+                    sleep 15s
+                    #PPPOE="$((PPPOE + 1))"
+                    #else
+                    #break
                 fi
-                if [ ! -s '/var/log/ppp.log.0' ]; then
-                    if [ -s '/var/log/ppp.log' ]; then
-                        cat /var/log/ppp.log > /var/log/ppp.log.0
-                        sync
-                    fi
+            fi
+            #done
+        else
+            # After the loop executes three times, restart the pppoe-server process
+            #if [ "$PPPOE_ERRORS" -eq 2 ]; then
+            #restart_pppoe_server
+            #continue
+            #fi
+            if [ ! -s '/var/log/ppp.log.0' ]; then
+                if [ -s '/var/log/ppp.log' ]; then
+                    cat /var/log/ppp.log > /var/log/ppp.log.0
+                    sync
                 fi
-                clear_ppp_log
-                sleep 30s
-                if [ -f '/var/log/pppoe-server.log' ]; then
-                    # Read the last username and password in pppoe-server.log
-                    USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
-                    PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
-                    if [ -n "$USERNAME" ]; then
-                        PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
-                        if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
-                            uci set network.netkeeper.username="$USERNAME"
-                            uci set network.netkeeper.password="$PASSWORD"
-                            uci commit network
-                        fi
+            fi
+            clear_pppoe_server_log
+            clear_ppp_log
+            sleep 30s
+            if [ -f '/var/log/pppoe-server.log' ]; then
+                # Read the last username and password in pppoe-server.log
+                USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
+                PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
+                if [ -n "$USERNAME" ]; then
+                    PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
+                    if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
+                        uci set network.netkeeper.username="$USERNAME"
+                        uci set network.netkeeper.password="$PASSWORD"
+                        uci commit network
                     fi
                 fi
             fi
-        done
+        fi
+        #done
     done
 }
 

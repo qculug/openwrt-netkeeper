@@ -70,8 +70,8 @@ add_network_netkeeper() {
     uci set network.netkeeper.keepalive='60 300'
     uci set network.netkeeper.username='username'
     uci set network.netkeeper.password='password'
-    uci set network.netkeeper.persist='1'
-    uci set network.netkeeper.holdoff='1'
+    #uci set network.netkeeper.persist='1'
+    #uci set network.netkeeper.holdoff='1'
     uci commit network
 }
 
