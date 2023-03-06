@@ -66,6 +66,8 @@ main () {
                 if [ -n "$USERNAME" ]; then
                     PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
                     if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
+                        NEWMAC="$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | md5sum | sed -e 's/^\(..\)\(..\)\(..\)\(..\)\(..\)\(..\).*$/\1:\2:\3:\4:\5:\6/' -e 's/^\(.\)[13579bdf]/\10/')"
+                        uci set network.netkeeper.macaddr="$NEWMAC"
                         uci set network.netkeeper.username="$USERNAME"
                         uci set network.netkeeper.password="$PASSWORD"
                         uci commit network
@@ -107,6 +109,8 @@ main () {
                 if [ -n "$USERNAME" ]; then
                     PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
                     if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
+                        NEWMAC="$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | md5sum | sed -e 's/^\(..\)\(..\)\(..\)\(..\)\(..\)\(..\).*$/\1:\2:\3:\4:\5:\6/' -e 's/^\(.\)[13579bdf]/\10/')"
+                        uci set network.netkeeper.macaddr="$NEWMAC"
                         uci set network.netkeeper.username="$USERNAME"
                         uci set network.netkeeper.password="$PASSWORD"
                         uci commit network
