@@ -115,6 +115,10 @@ main () {
                         uci set network.netkeeper.password="$PASSWORD"
                         uci commit network
                     fi
+                else
+                    uci set network.netkeeper.username='username'
+                    uci set network.netkeeper.password='password'
+                    uci commit network
                 fi
             fi
         fi
