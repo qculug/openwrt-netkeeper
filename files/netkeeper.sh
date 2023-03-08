@@ -114,11 +114,13 @@ main () {
                         uci set network.netkeeper.username="$USERNAME"
                         uci set network.netkeeper.password="$PASSWORD"
                         uci commit network
+                    else
+                        uci set network.netkeeper.username='username'
+                        uci set network.netkeeper.password='password'
+                        uci commit network
+                        # Clear pppoe-server.log
+                        cat /dev/null > /var/log/pppoe-server.log
                     fi
-                else
-                    uci set network.netkeeper.username='username'
-                    uci set network.netkeeper.password='password'
-                    uci commit network
                 fi
             fi
         fi
