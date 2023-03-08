@@ -48,6 +48,8 @@ main () {
             #restart_pppoe_server
             #continue
             #fi
+            # Clear pppoe-server.log.0
+            cat /dev/null > /var/log/pppoe-server.log.0
             # Clear ppp.log.0
             cat /dev/null > /var/log/ppp.log.0
             clear_pppoe_server_log
@@ -91,6 +93,22 @@ main () {
             #restart_pppoe_server
             #continue
             #fi
+            if [ ! -s '/var/log/pppoe-server.log.0' ]; then
+                if [ -s '/var/log/pppoe-server.log' ]; then
+                    cat /var/log/pppoe-server.log > /var/log/pppoe-server.log.0
+                    sync
+                    # Read the username in pppoe-server.log.0
+                    USERNAME="$(grep 'user=' /var/log/pppoe-server.log.0 | grep 'rcvd' | tail -n 1 | sed 's/.*user="//;s/" password=.*//')"
+                    if [ -n "$USERNAME" ]; then
+                        PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
+                        if [ "$USERNAME" = "$PPPOE_USERNAME" ]; then
+                            uci set network.netkeeper.username='username'
+                            uci set network.netkeeper.password='password'
+                            uci commit network
+                        fi
+                    fi
+                fi
+            fi
             if [ ! -s '/var/log/ppp.log.0' ]; then
                 if [ -s '/var/log/ppp.log' ]; then
                     cat /var/log/ppp.log > /var/log/ppp.log.0
@@ -114,12 +132,6 @@ main () {
                         uci set network.netkeeper.username="$USERNAME"
                         uci set network.netkeeper.password="$PASSWORD"
                         uci commit network
-                    else
-                        uci set network.netkeeper.username='username'
-                        uci set network.netkeeper.password='password'
-                        uci commit network
-                        # Clear pppoe-server.log
-                        cat /dev/null > /var/log/pppoe-server.log
                     fi
                 fi
             fi

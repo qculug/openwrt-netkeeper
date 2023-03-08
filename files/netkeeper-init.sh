@@ -36,8 +36,13 @@ change_ppp_sh() {
     fi
     cp /lib/netifd/proto/ppp.sh /lib/netifd/proto/ppp.sh.orig.bak
     chmod 644 /lib/netifd/proto/ppp.sh.orig.bak
-    sed -i "/proto_run_command/i __username=\$(echo -e \"\$username\")" /lib/netifd/proto/ppp.sh
-    sed -i 's/__username=/\tusername=/' /lib/netifd/proto/ppp.sh
+    #sed -i "/proto_run_command/i __username=\$(echo -e \"\$username\")" /lib/netifd/proto/ppp.sh
+    #sed -i 's/__username=/\tusername=/' /lib/netifd/proto/ppp.sh
+    sed -i "/proto_run_command/i __username=" /lib/netifd/proto/ppp.sh
+    echo "##############################"
+    printf '%s: %s `%s` %s:\n' 'info' 'please write after' '__username=' 'in /lib/netifd/proto/ppp.sh file'
+    printf '$(%s | %s)\n' 'printf '\'%s\\n\'' "$username"' 'sed '\'s/\\\\r/\\\r/g\;s/\\\\"\"/\""/g\'''
+    echo "##############################"
 }
 
 edit_network_wan_wan6_unmanaged() {
