@@ -38,6 +38,18 @@ clear_ppp_log() {
     fi
 }
 
+set_network_macaddr() {
+    NEWMAC="$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | md5sum | sed -e 's/^\(..\)\(..\)\(..\)\(..\)\(..\)\(..\).*$/\1:\2:\3:\4:\5:\6/' -e 's/^\(.\)[13579bdf]/\10/')"
+    if [ -n "$(uci -q get network.wan.device)" ]; then
+        # openwrt/openwrt
+        #uci set "$(uci show network | grep @device | grep macaddr | awk -F '=' '{print $1}')"="$NEWMAC"
+        uci set network.@device[1].macaddr="$NEWMAC"
+    else
+        # coolsnowwolf/lede
+        uci set network.netkeeper.macaddr="$NEWMAC"
+    fi
+}
+
 main () {
     restart_pppoe_server
     while :; do
@@ -68,8 +80,7 @@ main () {
                 if [ -n "$USERNAME" ]; then
                     PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
                     if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
-                        NEWMAC="$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | md5sum | sed -e 's/^\(..\)\(..\)\(..\)\(..\)\(..\)\(..\).*$/\1:\2:\3:\4:\5:\6/' -e 's/^\(.\)[13579bdf]/\10/')"
-                        uci set network.netkeeper.macaddr="$NEWMAC"
+                        set_network_macaddr
                         uci set network.netkeeper.username="$USERNAME"
                         uci set network.netkeeper.password="$PASSWORD"
                         uci commit network
@@ -127,8 +138,7 @@ main () {
                 if [ -n "$USERNAME" ]; then
                     PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
                     if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
-                        NEWMAC="$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | md5sum | sed -e 's/^\(..\)\(..\)\(..\)\(..\)\(..\)\(..\).*$/\1:\2:\3:\4:\5:\6/' -e 's/^\(.\)[13579bdf]/\10/')"
-                        uci set network.netkeeper.macaddr="$NEWMAC"
+                        set_network_macaddr
                         uci set network.netkeeper.username="$USERNAME"
                         uci set network.netkeeper.password="$PASSWORD"
                         uci commit network

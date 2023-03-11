@@ -14,13 +14,15 @@ add_network_netkeeper() {
     if [ -n "$(uci -q get network.wan.device)" ]; then
         # openwrt/openwrt
         uci set network.netkeeper.device="$(uci get network.wan.device)"
+        #uci set "$(uci show network | grep @device | grep macaddr | awk -F '=' '{print $1}')"="$NEWMAC"
+        uci set network.@device[1].macaddr="$NEWMAC"
     else
         # coolsnowwolf/lede
         uci set network.netkeeper.ifname="$(uci get network.wan.ifname)"
+        uci set network.netkeeper.macaddr="$NEWMAC"
     fi
     uci set network.netkeeper.proto='pppoe'
     uci set network.netkeeper.hostname="$NEWHOST"
-    uci set network.netkeeper.macaddr="$NEWMAC"
     uci set network.netkeeper.auto='0'
     uci set network.netkeeper.demand='0'
     #uci set network.netkeeper.keepalive='60 300'
