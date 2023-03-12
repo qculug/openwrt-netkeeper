@@ -84,12 +84,13 @@ main () {
                         uci commit network
                         ifup netkeeper
                         logger -t netkeeper "new username: $USERNAME"
-                    else
-                        if [ -z "$(ifconfig | grep "netkeeper")" ]; then
-                            ifup netkeeper
-                        fi
+                        sleep 15s
+                        #else
+                        #if [ -z "$(ifconfig | grep "netkeeper")" ]; then
+                        #ifup netkeeper
+                        #fi
                     fi
-                    sleep 15s
+                    #sleep 15s
                     #PPPOE="$((PPPOE + 1))"
                     #else
                     #break
@@ -114,6 +115,8 @@ main () {
                             uci set network.netkeeper.username='username'
                             uci set network.netkeeper.password='password'
                             uci commit network
+                            # Clear pppoe-server.log
+                            cat /dev/null > /var/log/pppoe-server.log
                         fi
                     fi
                 fi
