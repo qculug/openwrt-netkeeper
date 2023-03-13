@@ -1,5 +1,7 @@
 #!/bin/sh
 
+NETKEEPER_DB_PATH='/usr/lib/netkeeper/netkeeper.db'
+
 kill_pppoe_server() {
     if [ -n "$(pgrep pppoe-server)" ]; then
         kill "$(pgrep pppoe-server)"
@@ -7,8 +9,6 @@ kill_pppoe_server() {
 }
 
 restart_pppoe_server() {
-    # Clear pppoe-server.log
-    #cat /dev/null > /var/log/pppoe-server.log
     kill_pppoe_server
     # Start pppoe-server
     pppoe-server -k -I br-lan
@@ -48,79 +48,61 @@ set_network_macaddr() {
     fi
 }
 
+sqlite3_netkeeper_db() {
+    if [ ! -f "$NETKEEPER_DB_PATH" ]; then
+        sqlite3 "$NETKEEPER_DB_PATH" ".databases"
+    fi
+    if [ "$(sqlite3 $NETKEEPER_DB_PATH "select count(*) from sqlite_master where type = 'table' and name = 'netkeeper';")" -eq 0 ]; then
+        sqlite3 "$NETKEEPER_DB_PATH" "create table netkeeper(id integer primary key, username text not null, password text not null);"
+    fi
+}
+
 main () {
     restart_pppoe_server
     while :; do
-        #for PPPOE_ERRORS in 0 1 2; do
         if [ -z "$(ifconfig | grep "netkeeper")" ]; then
-            # After the loop executes three times, restart the pppoe-server process
-            #if [ "$PPPOE_ERRORS" -eq 2 ]; then
-            #restart_pppoe_server
-            #continue
-            #fi
-            # Clear pppoe-server.log.0
-            cat /dev/null > /var/log/pppoe-server.log.0
             # Clear ppp.log.0
             cat /dev/null > /var/log/ppp.log.0
             clear_pppoe_server_log
             clear_ppp_log
-            # Output log to ppp.log
-            ifup netkeeper
-            sleep 15s
-            #PPPOE="0"
-            #while [ "$PPPOE" -lt 2 ]; do
-            if [ -f '/var/log/pppoe-server.log' ]; then
-                # Read the last username and password in pppoe-server.log
-                #USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
-                USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*user="//;s/" password=.*//')"
-                #PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
-                PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*password="//;s/".*//')"
-                if [ -n "$USERNAME" ]; then
-                    PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
-                    if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
-                        set_network_macaddr
-                        uci set network.netkeeper.username="$USERNAME"
-                        uci set network.netkeeper.password="$PASSWORD"
-                        uci commit network
-                        ifup netkeeper
-                        logger -t netkeeper "new username: $USERNAME"
-                        sleep 15s
-                        #else
-                        #if [ -z "$(ifconfig | grep "netkeeper")" ]; then
-                        #ifup netkeeper
-                        #fi
-                    fi
-                    #sleep 15s
-                    #PPPOE="$((PPPOE + 1))"
-                    #else
-                    #break
-                fi
-            fi
-            #done
-        else
-            # After the loop executes three times, restart the pppoe-server process
-            #if [ "$PPPOE_ERRORS" -eq 2 ]; then
-            #restart_pppoe_server
-            #continue
-            #fi
-            if [ ! -s '/var/log/pppoe-server.log.0' ]; then
-                if [ -s '/var/log/pppoe-server.log' ]; then
-                    cat /var/log/pppoe-server.log > /var/log/pppoe-server.log.0
-                    sync
-                    # Read the username in pppoe-server.log.0
-                    USERNAME="$(grep 'user=' /var/log/pppoe-server.log.0 | grep 'rcvd' | tail -n 1 | sed 's/.*user="//;s/" password=.*//')"
+            sqlite3_netkeeper_db
+            if [ "$(sqlite3 $NETKEEPER_DB_PATH "select count(*) from netkeeper;")" -eq 0 ]; then
+                sleep 15s
+                if [ -f '/var/log/pppoe-server.log' ]; then
+                    # Read the last username and password in pppoe-server.log
+                    USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*user="//;s/" password=.*//')"
+                    PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*password="//;s/".*//')"
                     if [ -n "$USERNAME" ]; then
                         PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
-                        if [ "$USERNAME" = "$PPPOE_USERNAME" ]; then
-                            uci set network.netkeeper.username='username'
-                            uci set network.netkeeper.password='password'
+                        if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
+                            set_network_macaddr
+                            uci set network.netkeeper.username="$USERNAME"
+                            uci set network.netkeeper.password="$PASSWORD"
                             uci commit network
-                            # Clear pppoe-server.log
-                            cat /dev/null > /var/log/pppoe-server.log
+                            ifup netkeeper
+                            logger -t netkeeper "new username: $USERNAME"
+                            sleep 15s
                         fi
                     fi
                 fi
+            else
+                DATABASE_ID="$(netkeeper-db next_data | grep 'id = ' | sed 's/.*id = //')"
+                USERNAME="$(netkeeper-db next_data | grep 'username = ' | sed 's/.*username = //')"
+                PASSWORD="$(netkeeper-db next_data | grep 'password = ' | sed 's/.*password = //')"
+                PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
+                if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
+                    set_network_macaddr
+                    uci set network.netkeeper.username="$USERNAME"
+                    uci set network.netkeeper.password="$PASSWORD"
+                    uci commit network
+                    sqlite3 "$NETKEEPER_DB_PATH" "delete from netkeeper where id=$DATABASE_ID"
+                    logger -t netkeeper "delete from netkeeper where id=$DATABASE_ID"
+                    ifup netkeeper
+                    logger -t netkeeper "new username: $USERNAME"
+                    sleep 15s
+                fi
             fi
+        else
             if [ ! -s '/var/log/ppp.log.0' ]; then
                 if [ -s '/var/log/ppp.log' ]; then
                     cat /var/log/ppp.log > /var/log/ppp.log.0
@@ -129,25 +111,26 @@ main () {
             fi
             clear_pppoe_server_log
             clear_ppp_log
-            sleep 30s
-            if [ -f '/var/log/pppoe-server.log' ]; then
-                # Read the last username and password in pppoe-server.log
-                #USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 2)"
-                USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*user="//;s/" password=.*//')"
-                #PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | cut -d \" -f 4)"
-                PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*password="//;s/".*//')"
-                if [ -n "$USERNAME" ]; then
-                    PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
-                    if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
-                        set_network_macaddr
-                        uci set network.netkeeper.username="$USERNAME"
-                        uci set network.netkeeper.password="$PASSWORD"
-                        uci commit network
+            sqlite3_netkeeper_db
+            sqlite3 "$NETKEEPER_DB_PATH" "delete from netkeeper where rowid not in (select min(rowid) from netkeeper group by username);"
+            if [ "$(du -k "$NETKEEPER_DB_PATH" | cut -f 1)" -lt 200 ]; then
+                if [ -f '/var/log/pppoe-server.log' ]; then
+                    # Read the last username and password in pppoe-server.log
+                    USERNAME="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*user="//;s/" password=.*//')"
+                    PASSWORD="$(grep 'user=' /var/log/pppoe-server.log | grep 'rcvd' | tail -n 1 | sed 's/.*password="//;s/".*//')"
+                    if [ -n "$USERNAME" ]; then
+                        PPPOE_USERNAME="$(uci -q get network.netkeeper.username)"
+                        if [ "$USERNAME" != "$PPPOE_USERNAME" ]; then
+                            sqlite3 "$NETKEEPER_DB_PATH" "insert into netkeeper values(null, '$USERNAME', '$PASSWORD');"
+                            # Clear pppoe-server.log
+                            cat /dev/null > /var/log/pppoe-server.log
+                            sync
+                        fi
                     fi
                 fi
             fi
+            sleep 5s
         fi
-        #done
     done
 }
 

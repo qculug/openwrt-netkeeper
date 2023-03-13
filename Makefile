@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=netkeeper
-PKG_VERSION:=1.8.2
-PKG_RELEASE:=3
+PKG_VERSION:=1.8.3
+PKG_RELEASE:=1
 
 #PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-openwrt-master
 #PKG_SOURCE:=master.zip
@@ -28,7 +28,7 @@ define Package/netkeeper
 	CATEGORY:=Network
 	TITLE:=Use NetKeeper by rp-pppoe-server
 	URL:=https://github.com/qculug/openwrt-netkeeper
-	DEPENDS:=+rp-pppoe-server
+	DEPENDS:=+rp-pppoe-server +sqlite3-cli
 	PKGARCH:=all
 endef
 
@@ -42,6 +42,8 @@ endef
 define Package/netkeeper/install
 	$(INSTALL_DIR) $(1)/usr/bin/
 	$(INSTALL_BIN) ./files/netkeeper-init.sh $(1)/usr/bin/netkeeper-init
+	$(INSTALL_DIR) $(1)/usr/bin/
+	$(INSTALL_BIN) ./files/netkeeper-db.sh $(1)/usr/bin/netkeeper-db
 	$(INSTALL_DIR) $(1)/usr/lib/netkeeper/
 	$(INSTALL_BIN) ./files/netkeeper.sh $(1)/usr/lib/netkeeper
 	$(INSTALL_DIR) $(1)/etc/init.d/
