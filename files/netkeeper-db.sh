@@ -14,12 +14,16 @@ next_data() {
     sqlite3 "$NETKEEPER_DB_PATH" << EOF
 .header on
 .mode line
-SELECT * FROM netkeeper ORDER BY id LIMIT 1;
+select * from netkeeper order by id limit 1;
 EOF
-
 }
+
 select_all() {
-    sqlite3 "$NETKEEPER_DB_PATH" "select * from netkeeper;"
+    sqlite3 "$NETKEEPER_DB_PATH" << EOF
+.header on
+.mode column
+select * from netkeeper;
+EOF
 }
 
 delete_all() {

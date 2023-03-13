@@ -129,7 +129,7 @@ main () {
                     fi
                 fi
             fi
-            sleep 5s
+            sleep 15s
         fi
     done
 }
