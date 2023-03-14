@@ -39,6 +39,7 @@ clear_ppp_log() {
 }
 
 set_network_macaddr() {
+    # Ensure that pppd can send new requests every time by replacing the virtual MAC
     NEWMAC="$(dd if=/dev/urandom bs=1024 count=1 2>/dev/null | md5sum | sed -e 's/^\(..\)\(..\)\(..\)\(..\)\(..\)\(..\).*$/\1:\2:\3:\4:\5:\6/' -e 's/^\(.\)[13579bdf]/\10/')"
     if [ -n "$(uci -q show network | grep @device | grep macaddr | awk -F '=' '{print $1}')" ]; then
         #uci set network.@device[1].macaddr="$NEWMAC"
@@ -49,9 +50,11 @@ set_network_macaddr() {
 }
 
 sqlite3_netkeeper_db() {
+    # Check if the database exists
     if [ ! -f "$NETKEEPER_DB_PATH" ]; then
         sqlite3 "$NETKEEPER_DB_PATH" ".databases"
     fi
+    # Check if table netkeeper exists in the database
     if [ "$(sqlite3 $NETKEEPER_DB_PATH "select count(*) from sqlite_master where type = 'table' and name = 'netkeeper';")" -eq 0 ]; then
         sqlite3 "$NETKEEPER_DB_PATH" "create table netkeeper(id integer primary key, username text not null, password text not null);"
     fi
@@ -60,6 +63,7 @@ sqlite3_netkeeper_db() {
 main () {
     restart_pppoe_server
     while :; do
+        # Check the operational status of the netkeeper interface
         if [ -z "$(ifconfig | grep "netkeeper")" ]; then
             # Clear ppp.log.0
             cat /dev/null > /var/log/ppp.log.0
@@ -86,6 +90,7 @@ main () {
                     fi
                 fi
             else
+                # It can be determined that there is data in the table netkeeper
                 DATABASE_ID="$(netkeeper-db next_data | grep 'id = ' | sed 's/.*id = //')"
                 USERNAME="$(netkeeper-db next_data | grep 'username = ' | sed 's/.*username = //')"
                 PASSWORD="$(netkeeper-db next_data | grep 'password = ' | sed 's/.*password = //')"
@@ -105,6 +110,7 @@ main () {
         else
             if [ ! -s '/var/log/ppp.log.0' ]; then
                 if [ -s '/var/log/ppp.log' ]; then
+                    # Keep the log content of the current successful pppd connection
                     cat /var/log/ppp.log > /var/log/ppp.log.0
                     sync
                 fi
@@ -113,6 +119,7 @@ main () {
             clear_ppp_log
             sqlite3_netkeeper_db
             sqlite3 "$NETKEEPER_DB_PATH" "delete from netkeeper where rowid not in (select min(rowid) from netkeeper group by username);"
+            # Avoid writing too much content to the database file
             if [ "$(du -k "$NETKEEPER_DB_PATH" | cut -f 1)" -lt 200 ]; then
                 if [ -f '/var/log/pppoe-server.log' ]; then
                     # Read the last username and password in pppoe-server.log
