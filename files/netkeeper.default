@@ -41,8 +41,16 @@ set_firewall_for_netkeeper() {
     uci commit firewall
 }
 
+add_cron() {
+    CRON_FILE=/etc/crontabs/root
+    CRON_JOB="*/15 * * * * /etc/init.d/netkeeper restart"
+
+    echo "$CRON_JOB" >> "$CRON_FILE"
+    /etc/init.d/cron restart
+}
+
 main() {
-    for COMMANDS in edit_network_wan_wan6_unmanaged add_network_netkeeper set_firewall_for_netkeeper; do
+    for COMMANDS in edit_network_wan_wan6_unmanaged add_network_netkeeper set_firewall_for_netkeeper add_cron; do
         "$COMMANDS"
         sleep 1s
         sync
