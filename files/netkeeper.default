@@ -28,7 +28,9 @@ add_network_netkeeper() {
     uci set network.netkeeper.hostname="$NEWHOST"
     uci set network.netkeeper.auto='0'
     uci set network.netkeeper.demand='0'
-    #uci set network.netkeeper.keepalive='60 300'
+    # lcp-echo-failure 300, lcp-echo-interval 60
+    uci set network.netkeeper.keepalive='300 60'
+    #
     uci set network.netkeeper.username='username'
     uci set network.netkeeper.password='password'
     #uci set network.netkeeper.persist='1'
